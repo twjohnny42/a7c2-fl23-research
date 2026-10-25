@@ -57,7 +57,7 @@ def make_worker_runtime():
                 raise ValueError('Archive path escapes worker')
             package.extract(item, worker)
     (worker / 'python312._pth').write_text('python312.zip\n.\npackages\n', encoding='utf-8')
-    for name in ('Cryptodome', 'yaml', 'elftools', 'unicorn'):
+    for name in ('Cryptodome', 'yaml', 'elftools', 'unicorn', 'usb', 'libusb_package', 'importlib_resources'):
         source = Path(importlib.util.find_spec(name).origin).parent
         shutil.copytree(source, worker / 'packages' / name, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
@@ -67,7 +67,29 @@ def make_worker_runtime():
     destination.mkdir(parents=True, exist_ok=True)
     for name in ('zig.exe', '__init__.py', '__main__.py', 'LICENSE'):
         shutil.copyfile(zig / name, destination / name)
-    shutil.copyfile(ROOT / 'a7cr_research.py', worker / 'a7cr_research.py')
+    for name in ('a7cr_research.py', 'a7cr_reader.py', 'a7cr_operations.py', 'a7cr_easy.py', 'a7cr_windows_pnp.py', 'a7cr_drivers.py'):
+        shutil.copyfile(ROOT / name, worker / name)
+    shutil.copytree(ROOT / 'src/fl23/vendor/pmca', worker / 'packages/pmca', dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+    driver = ROOT / 'build/a7cr/driver-helper/wdi-simple.exe'
+    if not driver.exists():
+        import io
+        with urllib.request.urlopen('https://github.com/Timocop/libwdi-wdi-releases/releases/download/v1.0/x64.zip', timeout=60) as response:
+            archive_bytes = response.read()
+        if hashlib.sha256(archive_bytes).hexdigest() != 'd5aace13a3c1d5980113a5938fbee2edaa788ed625e3c554ff47da24cde39cda':
+            raise ValueError('Driver archive changed')
+        with zipfile.ZipFile(io.BytesIO(archive_bytes)) as package:
+            names = [name for name in package.namelist() if Path(name).name.lower() == 'wdi-simple.exe']
+            if len(names) != 1:
+                raise ValueError('Ambiguous driver helper')
+            driver.parent.mkdir(parents=True, exist_ok=True)
+            driver.write_bytes(package.read(names[0]))
+    from a7cr_drivers import HELPER_SHA256
+    if hashlib.sha256(driver.read_bytes()).hexdigest() != HELPER_SHA256:
+        raise ValueError('Driver helper changed')
+    destination = worker / 'drivers/wdi-simple.exe'
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(driver, destination)
     shutil.copyfile(ROOT / 'dev/a7cr_worker.py', worker / 'worker.py')
     return worker
 
@@ -76,9 +98,10 @@ if __name__ == '__main__':
     pack = make_reference_pack()
     worker = make_worker_runtime()
     command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed',
-               '--name', 'A7CR-Preparation', '--distpath', str(ROOT / 'dist/a7cr'),
+               '--name', 'A7CR-Tools-BackupDev', '--distpath', str(ROOT / 'dist/a7cr'),
                '--workpath', str(ROOT / 'build/a7cr/pyinstaller'), '--specpath', str(ROOT / 'build/a7cr'),
                '--add-data', str(pack) + ':reference-pack', '--add-data', str(ROOT / 'LICENSE') + ':.',
+               '--add-data', str(ROOT / 'docs/licenses/injectiver-MIT.txt') + ':notices',
                '--add-data', str(worker) + ':worker',
                str(ROOT / 'a7cr_easy_gui.py')]
     subprocess.run(command, cwd=ROOT, check=True)

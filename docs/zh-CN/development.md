@@ -172,3 +172,17 @@ python -m venv .venv-a7cr
 打包后的 A7CR-Preparation.exe 不需要 Python/Git。内含固定版本且通过校验的研究源码和编译/运行工具，不内含 Sony 更新数据或衍生候选。资料保存至 LOCALAPPDATA/A7CRTools；测试可用 A7CR_TOOLS_DATA 覆盖。首次下载约 2.3 GB，要求至少 7 GiB 可用空间。开发者安装 dev/a7cr-requirements.txt 与 pyinstaller==6.16.0 后运行 python dev/build_a7cr_easy.py 构建。测试位于 dev/desktop 的两个 A7CR 测试模块。
 
 GUI 保留正常启用 CFG 的 Windows bootloader。原生模拟在内附的官方 Python 3.12.10 嵌入解释器中执行，以 python312._pth 隔离，避开已有记录的 Unicorn/PyInstaller CFG 不兼容问题；不改变 Windows 安全设置。
+
+## A7CR 设备开发
+
+备份开发版分开处理 Windows USB 驱动、唯读服务备份，以及仅限内存模拟的安装/恢复事务。启动和离线准备不枚举 USB；连接检查仅读取描述符与 Windows SetupAPI 资料，检测回执不包含带序号的 PnP 实例路径。
+
+`a7cr_reader.py` 将 injectiver 的 MIT A7CR 读取器适配到 Windows（许可保存在 docs/licenses）。只选择 AP/CP 程序路径并读取校验有效的内存/已保存 Backup 快照；不上载原生代码，不写相机文件或设置。机型、接口、机身绑定、读取长度或结果异常时停止，不重试认证。两个新鲜独立目录保存程序、两份设置快照与四个受保护 CP 单元；每个文件回读后再由 a7cr_operations.verify_checkpoint 独立验证。这是当前状态的修改范围备份，不代表原厂状态或完整 eMMC/NOR；同一磁碟两个目录不等于异盘灾难恢复。
+
+`a7cr_drivers.py` 只有经明确确认才动作；仅接受一个当前存在的 054C:0E86 或 054C:0336 节点，沿用可用驱动，校验固定 helper，保存前态/意图/后态，并要求安装后可用且仍是同一实例。结果不明会持久阻止重试。0336 回调只观察重枚举并准备一次主机驱动，不重复认证；UAC 由机主亲自处理，不关闭签名验证或修改 Windows 安全设置。helper 与上游项目引用的第三方 libwdi 版本相同。驱动流程和实机备份仍待硬件验收，离线测试不算实机证据。
+
+`a7cr_transaction_model.py` 仅接受内存 SimulationDevice，测试 CP 程序→CP 参数→AP 程序→AP 绑定→WBI 的顺序、选定范围反向恢复、保留后续无关设置、确认丢失及回读不符；拒绝真实后端。WRITE_BACKEND_RELEASED 继续为 false，两个写入按钮保持禁用。不能通过可编辑 JSON 或成功备份就开放刷机。
+
+开发者原生检查：python dev/check_a7cr_native.py --workspace build/a7cr-native-check。首次获取哈希固定的历史 MIT worker 源码，通过 Zig LLVM 前端/链接器编译 AArch64，再模拟 20 个系统调用案例，包含短读、部分写入、反向阶段、恢复只读挂载及 WBI 顺序。它们只是历史参考 worker 的模拟，不是生产用 Windows 相机 worker、开机模拟或断电救援证明。
+
+主机测试为 dev/desktop 下六个 test_a7cr_*.py 模块。实机须分别验收 Win11 服务进入/退出、同机备份比较、原生预检、分阶段写入/完整回读、新开机、预览/新照片/播放和实际恢复；尚无任意 CP 损坏或断电救援证据。软件检查无法满足零变砖风险保证。

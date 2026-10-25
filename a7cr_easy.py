@@ -14,7 +14,7 @@ import time
 import urllib.request
 import uuid
 
-VERSION = '0.2.0-preparation'
+VERSION = '0.3.0-backup-development'
 SOURCES = (
     ('ILCE-7CR_2.01', 'https://support.d-imaging.sony.co.jp/download/NEX/jY168ad238/BODYDATA.DAT?fm=cn',
      1140252120, '6f0e088e2aea121fcb6fc32bf57b225c68705939a284741d529d477f0ad90128'),
@@ -186,10 +186,80 @@ def research_worker(args):
     with Path(log).open('w', encoding='utf-8', buffering=1) as output:
         sys.stdout = sys.stderr = output
         try:
-            import a7cr_research
-            a7cr_research.run(stage, Path(references), Path(workspace))
+            if stage == 'identify':
+                import a7cr_reader
+                a7cr_reader.save_json(Path(workspace) / 'device-check.private.json',
+                    {'devices': a7cr_reader.descriptor_inventory(), 'windows_devices': a7cr_reader.windows_inventory(), 'authenticated': False,
+                     'firmware_or_settings_written': False})
+            elif stage in ('backup', 'backup-with-driver'):
+                from a7cr_operations import backup_action
+                backup_action(Path(workspace), prepare_drivers=stage == 'backup-with-driver')
+            else:
+                import a7cr_research
+                a7cr_research.run(stage, Path(references), Path(workspace))
             return 0
         except BaseException:
             import traceback
             traceback.print_exc()
             return 1
+
+
+def run_backup_worker(root, emit, *, allow_driver_setup=False):
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    receipt = root / 'latest-backup.private.json'
+    old_first = json.loads(receipt.read_text(encoding='utf-8')).get('first') if receipt.exists() else None
+    log = root / ('backup-' + uuid.uuid4().hex + '.private.log')
+    emit('status', '正在自動備份相機；請勿拔線或關機。', 0)
+    flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+    process = subprocess.Popen(worker_command('backup-with-driver' if allow_driver_setup else 'backup', reference_root(), root, log),
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=flags)
+    while process.poll() is None:
+        time.sleep(0.2)  # No cancel/terminate is offered during a camera session.
+    if process.returncode:
+        raise RuntimeError('備份未完成。請保留 USB 連線與紀錄；沒有寫入韌體。若尚未準備相機驅動，需先完成驅動支援。')
+    report = json.loads((root / 'latest-backup.private.json').read_text(encoding='utf-8'))
+    if (report.get('phase') != 'BACKUP_VERIFIED' or report.get('firmware_or_settings_written') is not False
+            or report.get('first') == old_first):
+        raise ValueError('Backup receipt is incomplete')
+    emit('workspace', report['first'], 0)
+    emit('complete', '雙副本備份完成並驗證。這不是完整晶片映像，也不能保證救回故障相機。', 1)
+    return report
+
+
+def run_identify_worker(root, emit):
+    root = Path(root)
+    root.mkdir(parents=True, exist_ok=True)
+    from a7cr_easy import single_job
+    with single_job(root / 'device-session'):
+        output = root / 'device-check.private.json'
+        if output.exists():
+            archived = root / ('device-check-' + uuid.uuid4().hex + '.private.json')
+            output.rename(archived)
+        log = root / ('identify-' + uuid.uuid4().hex + '.private.log')
+        flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+        process = subprocess.Popen(worker_command('identify', reference_root(), root, log),
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=flags)
+        while process.poll() is None:
+            time.sleep(0.2)
+        if process.returncode:
+            raise RuntimeError('連線檢查未完成；未認證或改寫相機，紀錄已保留。')
+        report = json.loads(output.read_text(encoding='utf-8'))
+        if report.get('authenticated') is not False or report.get('firmware_or_settings_written') is not False:
+            raise ValueError('Unexpected identification receipt')
+        devices = report['devices']
+        matches = [row for row in devices if str(row.get('product', '')).upper() == 'ILCE-7CR' and 8 in row.get('interfaces', [])]
+        if len(matches) == 1:
+            text = '已辨識 A7CR 大量儲存介面；尚未認證或備份。'
+        elif any(row.get('usb_id') == 'VID_054C&PID_0EA9' for row in report.get('windows_devices', [])):
+            text = '已看到 A7CR，但目前為 USB 串流模式。請切換影像傳輸／大量儲存後重新接線。未認證相機。'
+        elif not devices and report.get('windows_devices'):
+            text = 'Windows 看到 Sony 裝置，但 libusb 無法讀取；請先確認大量儲存模式與驅動。未認證相機。'
+        elif not devices:
+            text = '目前未偵測到 Sony USB。請確認線材、模式及 USB 連接埠。'
+        elif any(row.get('descriptor_error') for row in devices):
+            text = '看到 Sony USB，但描述資訊無法讀取；可能是驅動或存取權限問題。未認證相機。'
+        else:
+            text = '偵測到 Sony 裝置，但尚未確認唯一的 A7CR 大量儲存介面。未認證相機。'
+        emit('complete', text, 1)
+        return report

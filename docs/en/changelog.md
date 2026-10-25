@@ -2,6 +2,12 @@
 
 [Home](../../README.md) · [简体中文](../zh-CN/changelog.md)
 
+## A7CR Windows backup development - 2026-10-25
+
+- Add explicit Windows identification and duplicate, body-bound read-only backup verification. Add owner-confirmed driver preparation limited to 054C:0E86/0336; preserve unknown-result journals and refuse retries. Windows UAC remains manual.
+- Passed 95 host tests with 11 subtests, packaged self-test and 20 historical native-worker synthetic syscall cases. Live identification observed A7CR MSC / USBSTOR only; no service authentication, real backup or firmware write yet.
+- Add simulation-only install/restore ordering and fault injection. Real install/restore stay disabled; no physical recovery or zero-brick guarantee.
+
 ## One-button Windows preparation app - 2026-10-25
 
 - Add a standalone Traditional Chinese GUI and packaged EXE: one button automatically obtains official inputs and runs inspection, extraction and candidate checks. No Python/Git installation or firmware selection required. Preserve partial/failed work, verify HTTP ranges before resuming, and prevent simultaneous jobs.

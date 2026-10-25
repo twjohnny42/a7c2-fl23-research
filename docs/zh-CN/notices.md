@@ -89,3 +89,6 @@ Required Notice: Copyright (c) 2026 QAQLeonard, for original project-authored co
 ## A7CR research references
 
 A7CR 离线引用在本地取得：injectiver/a7cr-creative-look-tools（MIT，保留原 LICENSE/NOTICE）、lzh2016zzz/a7cr-fl23-research（规格，不重新许可）、历史 A7C II 提交 b51688deecb56cd34fdd1f2948915cd6ea4e6736（保留原许可），以及 DavidBuchanan314/fwtool.py 提交 3955d7890fc38daf942bb52827599bfe35de4a14（checkout 保留原许可）。Sony 固件及衍生程序/数据保留在本地，此 fork 不授予这些资产的权利。
+
+
+A7CR backup reader: injectiver MIT attribution is retained in `docs/licenses/injectiver-MIT.txt`. Host driver helper is the unmodified Timocop libwdi-wdi-releases v1.0 x64 build, SHA256 27b6d9847d874674b7c412af124acf64b0b1efa397e3bbea8eab9950a6a08ee0. libwdi is LGPL-3.0-or-later; upstream source and build details: https://github.com/Timocop/libwdi-wdi-releases and https://github.com/pbatard/libwdi. The tool never disables driver signature enforcement.

@@ -1,8 +1,8 @@
 {
-  "schema": "a7cr-windows-offline-research/1",
+  "schema": "a7cr-windows-backup-development/1",
   "model": "ILCE-7CR",
   "firmware": "2.01",
-  "device_access": false,
+  "device_access": true,
   "installable_package": false,
   "physical_validation_performed": false,
   "cpu_checks": {
@@ -25,15 +25,15 @@
     }
   },
   "remaining": [
-    "Windows service transport and driver validation",
-    "Fresh same-body backups and native parameter merge",
-    "Native preflight, write/readback and rollback integration",
+    "Owner-approved Windows driver preparation and service entry/exit acceptance",
+    "Fresh dual same-body backups and verification",
+    "Production native preflight, write/readback and inverse integration",
     "Physical boot, preview, new photos/playback and restoration acceptance"
   ],
   "date": "2026-10-25",
   "host": "Windows x64 / Python 3.12",
   "source_windows_matched": 32,
-  "automated_tests_passed": 32,
+  "automated_tests_passed": 95,
   "notes": "Offline inverse is not physical recovery. No firmware-derived bytes or body data included.",
   "packaged_gui_self_test_passed": true,
   "packaged_end_to_end_preparation_passed": true,
@@ -41,5 +41,17 @@
   "packaged_end_to_end_seconds": 98.8,
   "installation_available": false,
   "embedded_worker": "Official CPython 3.12.10; no system Python/Git needed",
-  "gui_layout_inspected": true
+  "gui_layout_inspected": true,
+  "subtests_passed": 11,
+  "native_synthetic_syscall_cases_passed": 20,
+  "physical_observation": {
+    "windows_msc_identity": "054C:0E86",
+    "windows_driver": "USBSTOR",
+    "service_authenticated": false,
+    "backup_completed": false,
+    "camera_persistent_writes": false
+  },
+  "restoration_available": false,
+  "zero_brick_guarantee": false,
+  "packaged_end_to_end_preparation_scope": "Previous preparation build; cached official inputs, not rerun as physical test"
 }
