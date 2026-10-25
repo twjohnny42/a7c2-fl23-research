@@ -77,6 +77,8 @@ def backup_action(root, *, prepare_drivers=False):
     root = Path(root).resolve()
     state_file = root / 'device-state.private.json'
     with single_job(root / 'device-session'):
+        from a7cr_actions import stopped_state
+        stopped_state(root)
         if state_file.exists():
             previous = json.loads(state_file.read_text(encoding='utf-8'))
             if previous['phase'] in ('READ_ONLY_BACKUP_STARTED', 'STOPPED_INSPECTION_REQUIRED'):
@@ -111,10 +113,12 @@ def backup_action(root, *, prepare_drivers=False):
 
 
 def admission_status():
-    # Compile-time release policy, never an editable per-body JSON flag.
+    # Stable release remains unavailable; experimental actions have separate consent and live checks.
     return {'model': MODEL, 'backup_available': True, 'install_available': WRITE_BACKEND_RELEASED,
             'restore_available': WRITE_BACKEND_RELEASED, 'brick_free_guarantee': False,
-            'reason': '尚無此 Windows/A7CR 寫入及實機復原驗證；不開放相機寫入。'}
+            'experimental_install_available': True, 'experimental_restore_available': True,
+            'physical_windows_installation_verified': False,
+            'reason': '穩定版尚無 Windows/A7CR 實機寫入及復原驗證；實驗流程另需明確同意與原生檢查。'}
 
 
 def require_released_write_backend():

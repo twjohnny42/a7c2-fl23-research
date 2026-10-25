@@ -5,13 +5,16 @@ import traceback
 
 
 def main(argv):
-    if len(argv) != 4 or argv[0] not in ('inspect', 'extract', 'build', 'backup', 'backup-with-driver', 'identify'):
+    if len(argv) != 4 or argv[0] not in ('inspect', 'extract', 'build', 'backup', 'backup-with-driver', 'identify', 'install', 'restore'):
         return 2
     stage, references, workspace, log = argv
     with Path(log).open('w', encoding='utf-8', buffering=1) as output:
         sys.stdout = sys.stderr = output
         try:
-            if stage == 'identify':
+            if stage in ('install', 'restore'):
+                from a7cr_actions import write_worker
+                write_worker(stage, Path(workspace), Path(log))
+            elif stage == 'identify':
                 import a7cr_reader
                 a7cr_reader.save_json(Path(workspace) / 'device-check.private.json',
                     {'devices': a7cr_reader.descriptor_inventory(), 'windows_devices': a7cr_reader.windows_inventory(), 'authenticated': False,

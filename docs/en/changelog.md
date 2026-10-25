@@ -2,6 +2,13 @@
 
 [Home](../../README.md) · [简体中文](../zh-CN/changelog.md)
 
+## A7CR experimental installation 0.4.0 - 2026-10-25
+
+- Implement a separate Windows per-body installer, native preflight and targeted inverse. The existing A7C II desktop/CLI are unchanged. Use edited-byte admission, full host byte readback and backup2 as the original source; no firmware fingerprint whitelist, repeated whole-package SHA scan or extra original-program payload copies.
+- Replace historical whole-file-hash native gates and automatic write-error rollback with ABI v2 edited-byte/dependency guards and stop-with-evidence behavior. Check size/inode/mount/cleanup, bind AP serial immediately after service entry, preserve later unrelated CP/AP settings, and reject unsaved conflicts before SAVE3.
+- Keep explicit experimental-write/power confirmation; no automatic retry/reboot. Package as a directory so driver helper paths are stable; the earlier Windows 1223 elevation rejection remains physically unresolved. Full firmware, jobs and body data are excluded.
+- 142 host tests and 103 subtests; 21 native syscall simulations including partial accepted writes with no retry/inverse; complete native job preparation using explicitly synthetic factory-default fixtures. Offline evidence is not physical acceptance. No actual camera program/settings writes have occurred in this development session.
+
 ## A7CR backup development 0.3.1 - 2026-10-25
 
 - Handle Windows helper launch rejection as a known pre-authentication failure and explain direct desktop launch. Catch blocked folder opening instead of leaving an unhandled callback. Unknown service outcomes continue to prohibit retries.

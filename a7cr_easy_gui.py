@@ -18,8 +18,9 @@ def main():
         a7cr_research.verify_references(reference_root())
         import a7cr_reader
         import a7cr_operations
+        import a7cr_actions, a7cr_job, a7cr_install
         report = {'references_valid': True, 'backup_modules_available': True, 'camera_accessed': False,
-                  'installation_available': False, 'zero_brick_guarantee': False}
+                  'installation_available': True, 'experimental': True, 'physical_installation_verified': False, 'zero_brick_guarantee': False}
         Path(sys.argv[2]).write_text(json.dumps(report, indent=2), encoding='utf-8')
         return 0
     if len(sys.argv) > 1 and sys.argv[1] == '--prepare-local':
@@ -31,7 +32,7 @@ def main():
     from tkinter import ttk, messagebox
     from a7cr_easy import Cancelled, VERSION, data_root, prepare, reference_root
     root = tk.Tk()
-    root.title('A7CR FL2 / FL3 工具 — 備份開發版')
+    root.title('A7CR FL2 / FL3 — 實驗安裝版')
     root.geometry('850x760')
     root.minsize(800, 720)
     root.configure(bg='#101722')
@@ -46,9 +47,9 @@ def main():
     tk.Label(shell, text='先保存這台相機的資料，再處理後續安裝。', fg='#b8c5d6', bg='#101722').pack(anchor='w')
     card = tk.Frame(shell, bg='#1c2838', padx=22, pady=18)
     card.pack(fill='x', pady=(24, 0))
-    tk.Label(card, text='目前開放：唯讀雙備份與自動準備', fg='#ffffff', bg='#1c2838', font=('Microsoft JhengHei UI', 13, 'bold')).pack(anchor='w')
-    tk.Label(card, text='安裝與還原仍未開放：尚缺 Windows A7CR 的實機寫入與復原驗證。', fg='#f3cd83', bg='#1c2838', wraplength=650, justify='left').pack(anchor='w', pady=(8, 0))
-    tk.Label(card, text='備份只讀取相機，不寫入韌體；Windows 連線仍待實機驗證。\n備份不是完整晶片映像，也不能保證故障後一定可救回。', fg='#bdcadb', bg='#1c2838', justify='left').pack(anchor='w', pady=(10, 0))
+    tk.Label(card, text='實驗版：自動備份 → 機身檢查 → 分階段安裝', fg='#ffffff', bg='#1c2838', font=('Microsoft JhengHei UI', 13, 'bold')).pack(anchor='w')
+    tk.Label(card, text='具有實際寫入能力；尚未完成此 Windows / A7CR 的實機安裝與還原驗收。', fg='#f3cd83', bg='#1c2838', wraplength=650, justify='left').pack(anchor='w', pady=(8, 0))
+    tk.Label(card, text='備份只讀取相機；實驗安裝會寫入相機程式與指定設定。\n備份不是完整晶片映像，也不能保證故障後一定可救回。', fg='#bdcadb', bg='#1c2838', justify='left').pack(anchor='w', pady=(10, 0))
     status = tk.StringVar(value='請先使用「自動備份」。不需安裝 Python 或輸入指令。')
     tk.Label(shell, textvariable=status, fg='#f4f7fb', bg='#101722', wraplength=700, justify='left').pack(anchor='w', pady=(23, 10))
     progress = ttk.Progressbar(shell, style='A7.Horizontal.TProgressbar', mode='determinate', maximum=100)
@@ -60,8 +61,10 @@ def main():
     backup = tk.Button(device_controls, text='自動備份（唯讀）', bg='#73d4bc', fg='#10251f',
                        relief='flat', padx=18, pady=12, font=('Microsoft JhengHei UI', 12, 'bold'))
     backup.pack(side='left')
-    tk.Button(device_controls, text='安裝 FL2 / FL3', state='disabled', padx=18, pady=12).pack(side='left', padx=10)
-    tk.Button(device_controls, text='還原刷入前狀態', state='disabled', padx=18, pady=12).pack(side='left')
+    install = tk.Button(device_controls, text='實驗安裝 FL2 / FL3', padx=12, pady=12)
+    install.pack(side='left', padx=10)
+    restore = tk.Button(device_controls, text='實驗還原', padx=12, pady=12)
+    restore.pack(side='left')
     controls = tk.Frame(shell, bg='#101722')
     controls.pack(fill='x', pady=(22, 0))
     events = queue.Queue()
@@ -76,13 +79,16 @@ def main():
     stop.pack(side='left', padx=10)
     folder = tk.Button(controls, text='開啟資料夾', padx=16, pady=12, relief='flat')
     folder.pack(side='right')
-    tk.Label(shell, text='非官方修改無法保證零變磚風險。本版不允許實機寫入。', fg='#92a4ba', bg='#101722', wraplength=700, justify='left').pack(anchor='w', pady=(22, 0))
+    tk.Label(shell, text='非官方修改可能造成無法開機，無法保證救回。請先確認已了解實驗版限制。', fg='#92a4ba', bg='#101722', wraplength=700, justify='left').pack(anchor='w', pady=(22, 0))
     tk.Label(shell, text='A7CR Tools  ' + VERSION, fg='#60768f', bg='#101722', font=('Segoe UI', 9)).pack(anchor='w', pady=(12, 0))
     def work(action):
         try:
             if action == 'identify':
                 from a7cr_easy import run_identify_worker
                 run_identify_worker(data_root(), lambda *event: events.put(event))
+            elif action in ('install', 'restore'):
+                from a7cr_easy import run_write_worker
+                run_write_worker(data_root(), action, lambda *event: events.put(event))
             elif action == 'backup':
                 from a7cr_easy import run_backup_worker
                 run_backup_worker(data_root(), lambda *event: events.put(event), allow_driver_setup=True)
@@ -100,8 +106,20 @@ def main():
         if action == 'backup' and not messagebox.askokcancel('開始唯讀備份',
                 '請確認相機是 A7CR 2.01，USB 設為大量儲存並直接連接電腦。\n電池請先充足。這次不會刷機。\n\n按確定亦允許準備相機 054C:0E86／0336 的 Windows WinUSB 驅動，可能出現管理員提示。\n備份為同一磁碟雙副本，不是完整晶片救援映像。', parent=root):
             return
+        if action == 'restore' and not (data_root() / 'latest-install-job.private.json').exists():
+            messagebox.showinfo('尚無還原工作', '目前沒有這個工具建立的安裝工作，無法選定原始備份。', parent=root)
+            return
+        if action in ('install', 'restore') and not messagebox.askyesno('實驗寫入確認',
+                '此版本會實際寫入 A7CR 2.01，尚未完成 Windows 實機安裝與救援驗收。\n'
+                '可能造成相機無法開機，備份不能保證救回，也不能保證零變磚風險。\n\n'
+                '安裝會自動建立雙備份、下載資料、依機身合併、執行原生檢查，再分階段寫入。\n'
+                '還原只回復這次安裝的程式與 FL2/FL3 欄位，不是完整晶片救援。\n\n'
+                '請確認：韌體為 2.01、電池充足、USB 直接連接且可保持穩定供電。\n'
+                '按「是」表示同意準備 WinUSB 驅動與本次實驗寫入，並願意承擔上述風險。',
+                parent=root, default='no'):
+            return
         cancel.clear(); active[0] = True; active_action[0] = action
-        start.configure(state='disabled'); backup.configure(state='disabled'); identify.configure(state='disabled')
+        start.configure(state='disabled'); backup.configure(state='disabled'); identify.configure(state='disabled'); install.configure(state='disabled'); restore.configure(state='disabled')
         stop.configure(state='normal' if action == 'prepare' else 'disabled')
         threading.Thread(target=work, args=(action,), daemon=True).start()
     def stop_work():
@@ -118,6 +136,8 @@ def main():
                 '自動開啟被 Windows 拒絕。資料仍保存在：\n\n' + str(path), parent=root)
     identify.configure(command=lambda: begin('identify'))
     backup.configure(command=lambda: begin('backup'))
+    install.configure(command=lambda: begin('install'))
+    restore.configure(command=lambda: begin('restore'))
     start.configure(command=begin); stop.configure(command=stop_work); folder.configure(command=open_folder)
     def pump():
         try:
@@ -126,7 +146,7 @@ def main():
                 if kind == 'workspace':
                     last_folder[0] = Path(text)
                 elif kind == 'ended':
-                    active[0] = False; start.configure(state='normal'); backup.configure(state='normal'); identify.configure(state='normal'); stop.configure(state='disabled')
+                    active[0] = False; start.configure(state='normal'); backup.configure(state='normal'); identify.configure(state='normal'); install.configure(state='normal'); restore.configure(state='normal'); stop.configure(state='disabled')
                     if close_pending[0]:
                         root.destroy(); return
                 else:
@@ -137,9 +157,9 @@ def main():
             pass
         root.after(120, pump)
     def close():
-        if active[0] and active_action[0] in ('backup', 'identify'):
+        if active[0] and active_action[0] in ('backup', 'identify', 'install', 'restore'):
             close_pending[0] = True
-            status.set('相機讀取中，結束後會自動關閉。請勿拔線或關機。')
+            status.set('相機操作中，結束後會自動關閉。請勿拔線或關機。')
             return
         if active[0]:
             stop_work()

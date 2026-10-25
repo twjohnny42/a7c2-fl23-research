@@ -69,12 +69,13 @@ def main():
         raise ValueError('Previous results preserved; use a new workspace')
     out.mkdir(parents=True, exist_ok=True)
     sys.modules['inspect_sources'] = SimpleNamespace(ROOT=workspace, save_json=save_json)
-    compiler = load('build_native_workers', sources / 'build_native_workers.py')
-    compiler.UPSTREAM = sources / 'src/fl23'
-    compiler.subprocess = SimpleNamespace(run=portable_compile)
+    import a7cr_native_build as compiler
+    compiler.ROOT = workspace
+    compiler.OUT = out
+    sys.modules['build_native_workers'] = compiler
     save_json(out / 'workers.private.json', {'camera_preflight_passed': False,
               'installation_authorized': False, 'installable_package': False})
-    checker = load('check_native_workers', sources / 'check_native_workers.py')
+    checker = load('check_native_workers', ROOT / 'dev/a7cr_native_cases.py')
     checker.main()
 
 

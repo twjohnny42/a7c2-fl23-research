@@ -38,7 +38,16 @@ def save_json(path, value):
         json.dump(value, stream, indent=2, ensure_ascii=True)
         stream.flush()
         os.fsync(stream.fileno())
-    temporary.replace(path)
+    # Windows readers/scanners may briefly hold a non-delete-sharing handle.
+    # Only retry the host atomic rename, never a camera command or the write body.
+    for attempt in range(12):
+        try:
+            temporary.replace(path)
+            break
+        except PermissionError:
+            if attempt == 11:
+                raise  # Preserve the completed temporary journal for inspection.
+            time.sleep(min(0.02 * (attempt + 1), 0.12))
 
 from pmca.backup import BackupFile
 

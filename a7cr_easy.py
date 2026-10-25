@@ -14,7 +14,7 @@ import time
 import urllib.request
 import uuid
 
-VERSION = '0.3.1-backup-development'
+VERSION = '0.4.0-experimental'
 SOURCES = (
     ('ILCE-7CR_2.01', 'https://support.d-imaging.sony.co.jp/download/NEX/jY168ad238/BODYDATA.DAT?fm=cn',
      1140252120, '6f0e088e2aea121fcb6fc32bf57b225c68705939a284741d529d477f0ad90128'),
@@ -186,7 +186,10 @@ def research_worker(args):
     with Path(log).open('w', encoding='utf-8', buffering=1) as output:
         sys.stdout = sys.stderr = output
         try:
-            if stage == 'identify':
+            if stage in ('install', 'restore'):
+                from a7cr_actions import write_worker
+                write_worker(stage, Path(workspace), Path(log))
+            elif stage == 'identify':
                 import a7cr_reader
                 a7cr_reader.save_json(Path(workspace) / 'device-check.private.json',
                     {'devices': a7cr_reader.descriptor_inventory(), 'windows_devices': a7cr_reader.windows_inventory(), 'authenticated': False,
@@ -216,7 +219,7 @@ def backup_failure_message(root):
             and state.get('error_type') == 'DriverLaunchNotStarted'):
         return ('Windows 未允許驅動安裝程式啟動，尚未進入相機服務模式。\n'
                 '相機韌體與設定均未寫入，備份尚未開始。\n\n'
-                '請關閉工具，從檔案總管直接雙擊 A7CR-Tools-BackupDev.exe，'
+                '請關閉工具，從檔案總管直接雙擊 A7CR-FL23-Experimental.exe，'
                 '再按「自動備份」，並親自處理 Windows 管理員提示。\n'
                 '若仍被阻擋，請保留紀錄供檢查，勿停用 Windows 安全功能。')
     return ('備份未完成。請保留 USB 連線與紀錄供檢查；沒有寫入韌體。'
@@ -282,3 +285,35 @@ def run_identify_worker(root, emit):
             text = '偵測到 Sony 裝置，但尚未確認唯一的 A7CR 大量儲存介面。未認證相機。'
         emit('complete', text, 1)
         return report
+
+
+def run_write_worker(root,operation,emit):
+    """Explicit experimental GUI action; never starts on app launch."""
+    if operation not in ('install','restore'):raise ValueError('Unknown operation')
+    root=Path(root);root.mkdir(parents=True,exist_ok=True)
+    log=root/(operation+'-'+uuid.uuid4().hex+'.private.log')
+    emit('status','正在進行實驗安裝流程；請勿拔線、關機或關閉工具。' if operation=='install'
+         else '正在進行實驗還原；請勿拔線、關機或關閉工具。',0)
+    flags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0
+    process=subprocess.Popen(worker_command(operation,reference_root(),root,log),
+                             stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,creationflags=flags)
+    progress=log.with_suffix('.progress.private.json')
+    while process.poll() is None:
+        if progress.exists():
+            try:
+                event=json.loads(progress.read_text(encoding='utf-8'))
+                emit(*event)
+            except (OSError,ValueError):pass
+        time.sleep(0.5)
+    if process.returncode:
+        state=root/'operation-state.private.json'
+        if state.exists() and json.loads(state.read_text(encoding='utf-8')).get('phase')=='STOPPED_INSPECTION_REQUIRED':
+            raise RuntimeError('相機操作結果不明，已停止且不會自動重試或還原。請保留 USB 連線及所有紀錄供檢查。')
+        raise RuntimeError(backup_failure_message(root)+'\n請保留這次工作紀錄。')
+    result=json.loads(log.with_suffix('.result.private.json').read_text(encoding='utf-8'))
+    expected={'install':'INSTALL_DISK_VERIFIED_PENDING_PHYSICAL_CHECK','restore':'RESTORE_DISK_VERIFIED_PENDING_PHYSICAL_CHECK'}
+    if result.get('phase')!=expected[operation] or result.get('physical_boot_verified') is not False:
+        raise ValueError('Device operation receipt is incomplete')
+    emit('workspace',result['job'],1)
+    emit('complete','寫入及完整讀回完成，USB 操作已結束。接著仍須重啟、確認預覽、新照片及播放；這不是實機驗收完成。',1)
+    return result

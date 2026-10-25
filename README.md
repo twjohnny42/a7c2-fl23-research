@@ -1,4 +1,4 @@
-> **A7CR backup development app:** `A7CR-Tools-BackupDev.exe` adds explicit read-only identification and automatic, body-bound dual backups. Windows driver preparation is limited to 054C:0E86/0336 and requires separate owner confirmation/UAC. Live installation and restoration remain disabled: no brick-free guarantee or physical recovery claim is made. See [development](docs/en/development.md#a7cr-device-development) and [validation](dev/a7cr-validation.json).
+> **A7CR 2.01 Windows experimental port:** `A7CR-FL23-Experimental.exe` now has real per-body installation and targeted restoration code. It creates fresh dual backups, merges only FL2/FL3 fields, runs native preflight and ordered CP/AP/settings/WBI stages, and performs full host byte readback. This Windows/body combination has **not** passed physical installation/restoration acceptance. No zero-brick guarantee. The original A7C II desktop remains separate. See [development](docs/en/development.md#a7cr-experimental-installation) and [validation](dev/a7cr-validation.json).
 
 # A7C II Tools 3.0
 

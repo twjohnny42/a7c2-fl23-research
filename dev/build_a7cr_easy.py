@@ -67,8 +67,9 @@ def make_worker_runtime():
     destination.mkdir(parents=True, exist_ok=True)
     for name in ('zig.exe', '__init__.py', '__main__.py', 'LICENSE'):
         shutil.copyfile(zig / name, destination / name)
-    for name in ('a7cr_research.py', 'a7cr_reader.py', 'a7cr_operations.py', 'a7cr_easy.py', 'a7cr_windows_pnp.py', 'a7cr_drivers.py'):
+    for name in ('a7cr_research.py', 'a7cr_reader.py', 'a7cr_operations.py', 'a7cr_easy.py', 'a7cr_windows_pnp.py', 'a7cr_drivers.py', 'a7cr_actions.py', 'a7cr_job.py', 'a7cr_preflight.py', 'a7cr_install.py', 'a7cr_transaction_model.py', 'a7cr_native_build.py', 'a7cr_native_compile.py'):
         shutil.copyfile(ROOT / name, worker / name)
+    shutil.copytree(ROOT / 'a7cr_native', worker / 'a7cr_native', dirs_exist_ok=True)
     shutil.copytree(ROOT / 'src/fl23/vendor/pmca', worker / 'packages/pmca', dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     driver = ROOT / 'build/a7cr/driver-helper/wdi-simple.exe'
@@ -97,8 +98,8 @@ def make_worker_runtime():
 if __name__ == '__main__':
     pack = make_reference_pack()
     worker = make_worker_runtime()
-    command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onefile', '--windowed',
-               '--name', 'A7CR-Tools-BackupDev', '--distpath', str(ROOT / 'dist/a7cr'),
+    command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--onedir', '--windowed',
+               '--name', 'A7CR-FL23-Experimental', '--distpath', str(ROOT / 'dist/a7cr'),
                '--workpath', str(ROOT / 'build/a7cr/pyinstaller'), '--specpath', str(ROOT / 'build/a7cr'),
                '--add-data', str(pack) + ':reference-pack', '--add-data', str(ROOT / 'LICENSE') + ':.',
                '--add-data', str(ROOT / 'docs/licenses/injectiver-MIT.txt') + ':notices',
