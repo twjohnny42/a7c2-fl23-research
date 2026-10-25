@@ -2,6 +2,11 @@
 
 [Home](../../README.md) · [简体中文](../zh-CN/changelog.md)
 
+## One-button Windows preparation app - 2026-10-25
+
+- Add a standalone Traditional Chinese GUI and packaged EXE: one button automatically obtains official inputs and runs inspection, extraction and candidate checks. No Python/Git installation or firmware selection required. Preserve partial/failed work, verify HTTP ranges before resuming, and prevent simultaneous jobs.
+- Keep the GUI CFG-enabled and isolate native emulation in the bundled official Python 3.12.10 interpreter. Passed 32 automated tests, packaged self-test, visual inspection, and a 98.8-second packaged full preparation using cached official inputs. No camera was accessed. Installation and camera restoration are not implemented or claimed.
+
 ## A7CR offline research fork - 2026-10-25
 
 - Add an offline Windows adapter around pinned A7CR research sources. Official A7CR 2.01 / Alpha 1 II 4.00 were decrypted and AP/CP extracted. Passed 32 source checks, 2304 emulated cases, exact program inverses and 20 new tests. No camera access, installation or physical restoration claim. A7C II workflows retain their model guards.

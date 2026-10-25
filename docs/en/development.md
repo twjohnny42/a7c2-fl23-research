@@ -164,3 +164,11 @@ Obtain official A7CR 2.01 and Alpha 1 II 4.00 updates yourself. Save separate `B
 Private outputs stay in the ignored workspace; a repeated build preserves an existing candidate and stops. Bootstrap fetches pinned research references, not Sony firmware. This CLI never opens USB, authenticates, changes drivers, writes programs/settings/WBI, or produces a flashable DAT. AP/CP candidates still need a fresh same-body parameter merge, verified duplicate backups, Windows transport/native transactions, staged readback, and physical restoration acceptance. Do not use them with the A7C II installer.
 
 `dev/a7cr-validation.json` records 32 source checks, 2304 emulated cases and exact AP/CP inverse round trips on Windows, plus 20 new tests. No physical camera was accessed; boot, preview, color and recovery remain unverified.
+
+## One-button Windows preparation app
+
+`a7cr_easy_gui.py` is an independent Tk GUI, not the A7C II desktop frontend. It automatically downloads and size/hash-checks the two official inputs, creates a private job, and runs inspect/extract/build in worker processes. Partial downloads resume only with an exact HTTP range response; corrupt files, failed jobs and interrupted candidates are preserved. Cancellation terminates only offline workers. Startup opens no camera and starts no download. A process lock prevents concurrent preparation. Completion is always PREPARED_NOT_INSTALLED; no install/restore controls or camera access are exposed.
+
+The packaged `A7CR-Preparation.exe` needs no Python or Git. It embeds pinned, integrity-checked reference sources and compiler/runtime files, never Sony update data or derived candidate programs. Data is stored under LOCALAPPDATA/A7CRTools, overridable with A7CR_TOOLS_DATA for tests. First-run downloads total about 2.3 GB; at least 7 GiB free is required. The source builder is `python dev/build_a7cr_easy.py` after installing `dev/a7cr-requirements.txt` and `pyinstaller==6.16.0`. Test both A7CR test modules under dev/desktop.
+
+The GUI keeps its normal Windows CFG-enabled bootloader. Native emulation runs in the bundled official Python 3.12.10 embedded interpreter, isolated with python312._pth, to avoid the documented Unicorn/PyInstaller CFG incompatibility. No Windows security setting is changed.

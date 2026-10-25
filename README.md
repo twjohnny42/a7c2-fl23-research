@@ -1,3 +1,5 @@
+> **Simple Windows preparation app:** open `A7CR-Preparation.exe` and click the single preparation button. It automatically obtains official inputs and runs the offline workflow; Python/Git are bundled or unnecessary at runtime. This is **preparation only, not camera installation or restoration**.
+
 > **A7CR research fork:** `a7cr_research.py` reproduces offline AP/CP candidate construction for ILCE-7CR 2.01 on Windows. This branch is **not an A7CR installer**. The desktop still supports A7C II only. See [development](docs/en/development.md#a7cr-offline-research-fork) and [validation](dev/a7cr-validation.json).
 
 # A7C II Tools 3.0

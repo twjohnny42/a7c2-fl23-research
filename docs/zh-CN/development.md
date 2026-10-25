@@ -164,3 +164,11 @@ python -m venv .venv-a7cr
 私有输出位于被 Git 忽略的目录；重复构建会保留已有候选并停止。bootstrap 仅获取固定研究引用，不下载 Sony 固件。CLI 不枚举 USB、不认证、不改驱动、不写程序/设置/WBI，也不生成可刷写 DAT。AP/CP 候选仍需新鲜同机参数合并、验证过的双备份、Windows 传输/原生事务、分阶段回读及实机恢复验收。切勿交给 A7C II 安装器。
 
 `dev/a7cr-validation.json` 记录 Windows 上 32 项源条件、2304 个模拟案例与 AP/CP 完整反向校验通过，另有 20 个新增测试通过。未存取相机；开机、预览、色彩及复原尚未验证。
+
+## Windows 一键准备工具
+
+`a7cr_easy_gui.py` 是独立 Tk 界面，不是 A7C II 桌面前端。自动下载并检查两个官方输入的长度/哈希，创建私有任务，在子进程执行 inspect/extract/build。仅当 HTTP Range 精确匹配时续传；损坏文件、失败任务与中断候选均保留。取消只会终止离线 worker。启动不连接相机、不开始下载；进程锁阻止并发准备。完成状态始终是 PREPARED_NOT_INSTALLED，没有安装/恢复控件，也不存取相机。
+
+打包后的 A7CR-Preparation.exe 不需要 Python/Git。内含固定版本且通过校验的研究源码和编译/运行工具，不内含 Sony 更新数据或衍生候选。资料保存至 LOCALAPPDATA/A7CRTools；测试可用 A7CR_TOOLS_DATA 覆盖。首次下载约 2.3 GB，要求至少 7 GiB 可用空间。开发者安装 dev/a7cr-requirements.txt 与 pyinstaller==6.16.0 后运行 python dev/build_a7cr_easy.py 构建。测试位于 dev/desktop 的两个 A7CR 测试模块。
+
+GUI 保留正常启用 CFG 的 Windows bootloader。原生模拟在内附的官方 Python 3.12.10 嵌入解释器中执行，以 python312._pth 隔离，避开已有记录的 Unicorn/PyInstaller CFG 不兼容问题；不改变 Windows 安全设置。

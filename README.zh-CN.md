@@ -1,3 +1,5 @@
+> **Windows 简易准备工具：**双击 `A7CR-Preparation.exe`，按一次准备按钮即可自动取得官方输入并完成离线流程，无需自行安装 Python/Git。当前**只能准备，尚不能安装到相机或恢复相机**。
+
 > **A7CR 研究分支：**`a7cr_research.py` 已在 Windows 重现 ILCE-7CR 2.01 的离线 AP/CP 构建。本分支**不是 A7CR 安装器**，桌面仍仅支持 A7C II。参见[开发说明](docs/zh-CN/development.md#a7cr-离线研究分支)及[验证记录](dev/a7cr-validation.json)。
 
 # A7C II Tools 3.0

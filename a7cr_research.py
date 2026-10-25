@@ -30,11 +30,31 @@ def text_digest(raw):
     return hashlib.sha256(raw.replace(b'\r\n', b'\n')).hexdigest()
 
 
+PARSER_MANIFEST_SHA256 = '1106239819aa119dfaa9f6313ae44c12ccea19e105fccc430af668927c8351d6'
+
+
 def verify_references(root):
     for relative, (_, _, _, digest) in REFERENCES.items():
         if text_digest((root / relative).read_bytes()) != digest:
             raise ValueError('Reference source changed: ' + relative)
     fwtool = root / 'research/repos/fwtool-cxd90057'
+    bundled = root / 'parser-manifest.json'
+    if bundled.exists():
+        raw = bundled.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != PARSER_MANIFEST_SHA256:
+            raise ValueError('Bundled parser manifest changed')
+        manifest = json.loads(raw)
+        if manifest['schema'] != 'a7cr-bundled-parser/1' or manifest['revision'] != FWTOOL_REV:
+            raise ValueError('Bundled parser provenance differs')
+        for name, expected in manifest['files'].items():
+            path = (fwtool / name).resolve()
+            if not path.is_relative_to(fwtool.resolve()) or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+                raise ValueError('Bundled parser source changed: ' + name)
+        actual_files = {str(p.relative_to(fwtool)).replace('\\', '/') for p in fwtool.rglob('*')
+                        if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc'}
+        if actual_files != set(manifest['files']):
+            raise ValueError('Unexpected bundled parser source files')
+        return
     actual = subprocess.check_output(['git', '-C', str(fwtool), 'rev-parse', 'HEAD'], text=True).strip()
     if actual != FWTOOL_REV:
         raise ValueError('Firmware parser revision differs')
@@ -103,7 +123,8 @@ def portable_assembler(command, **kwargs):
         raise ValueError('Unexpected builder subprocess')
     if len(command) != 8 or command[3:5] != ['-mthumb', '-c'] or command[6] != '-o':
         raise ValueError('Unexpected assembler arguments')
-    translated = [sys.executable, '-m', 'ziglang', 'clang', '-cc1as',
+    compiler = [str(Path(sys._MEIPASS) / 'ziglang/zig.exe')] if getattr(sys, 'frozen', False) else [sys.executable, '-m', 'ziglang']
+    translated = [*compiler, 'clang', '-cc1as',
                   '-triple', 'thumbv7-none-eabi', '-target-cpu', 'cortex-a9',
                   '-filetype', 'obj', '-o', command[7], command[5]]
     temp = Path(os.environ['ZIG_LOCAL_CACHE_DIR']) / 'temp'

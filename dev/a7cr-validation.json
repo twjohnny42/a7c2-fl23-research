@@ -33,6 +33,13 @@
   "date": "2026-10-25",
   "host": "Windows x64 / Python 3.12",
   "source_windows_matched": 32,
-  "automated_tests_passed": 20,
-  "notes": "Offline inverse is not physical recovery. No firmware-derived bytes or body data included."
+  "automated_tests_passed": 32,
+  "notes": "Offline inverse is not physical recovery. No firmware-derived bytes or body data included.",
+  "packaged_gui_self_test_passed": true,
+  "packaged_end_to_end_preparation_passed": true,
+  "packaged_test_inputs": "Cached official update containers",
+  "packaged_end_to_end_seconds": 98.8,
+  "installation_available": false,
+  "embedded_worker": "Official CPython 3.12.10; no system Python/Git needed",
+  "gui_layout_inspected": true
 }

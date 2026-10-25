@@ -94,3 +94,21 @@ def test_private_outputs_cannot_be_placed_in_tracked_source():
         with pytest.raises(ValueError):
             research.private_location(path)
     assert research.private_location(repo / 'build/a7cr') == repo / 'build/a7cr'
+
+def test_packaged_compiler_uses_bundled_zig_without_python_install(tmp_path, monkeypatch):
+    monkeypatch.setattr(research.sys, 'frozen', True, raising=False)
+    monkeypatch.setattr(research.sys, '_MEIPASS', str(tmp_path), raising=False)
+    monkeypatch.setenv('ZIG_LOCAL_CACHE_DIR', str(tmp_path / 'cache'))
+    command = ['/Library/Developer/CommandLineTools/usr/bin/clang', '-target',
+               'armv7-none-eabi', '-mthumb', '-c', 'input.S', '-o', 'output.o']
+    with patch.object(research.subprocess, 'run') as run:
+        research.portable_assembler(command, check=True)
+    assert run.call_args.args[0][0] == str(tmp_path / 'ziglang/zig.exe')
+    assert '-m' not in run.call_args.args[0]
+
+
+def test_altered_bundled_parser_manifest_is_rejected(tmp_path):
+    (tmp_path / 'parser-manifest.json').write_text('{}')
+    with patch.object(research, 'REFERENCES', {}),patch.object(research.subprocess, 'run') as run,pytest.raises(ValueError):
+        research.verify_references(tmp_path)
+    run.assert_not_called()
