@@ -123,8 +123,9 @@ class DriverSetup:
                   'firmware_or_settings_written': False})
         try:
             self.runner(driver_arguments(executable, pid, self.root / ('driver-' + pid)))
-        except DriverLaunchNotStarted:
-            save_json(receipt, {'phase': 'HELPER_NOT_STARTED', 'pid': pid})
+        except DriverLaunchNotStarted as error:
+            save_json(receipt, {'phase': 'HELPER_NOT_STARTED', 'pid': pid,
+                                'windows_error': error.errno, 'camera_authenticated': False})
             raise
         deadline = time.monotonic() + self.readiness_seconds
         while True:

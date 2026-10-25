@@ -2,6 +2,11 @@
 
 [Home](../../README.md) · [简体中文](../zh-CN/changelog.md)
 
+## A7CR backup development 0.3.1 - 2026-10-25
+
+- Handle Windows helper launch rejection as a known pre-authentication failure and explain direct desktop launch. Catch blocked folder opening instead of leaving an unhandled callback. Unknown service outcomes continue to prohibit retries.
+- Physical attempt returned Windows 1223 / HELPER_NOT_STARTED. The driver remains USBSTOR; no service authentication, backup or camera writes occurred. The owner has authorized driver preparation; Windows launch acceptance is still unresolved. Re-ran 95 host tests and 11 subtests.
+
 ## A7CR Windows backup development - 2026-10-25
 
 - Add explicit Windows identification and duplicate, body-bound read-only backup verification. Add owner-confirmed driver preparation limited to 054C:0E86/0336; preserve unknown-result journals and refuse retries. Windows UAC remains manual.

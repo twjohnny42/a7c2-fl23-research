@@ -14,7 +14,7 @@ import time
 import urllib.request
 import uuid
 
-VERSION = '0.3.0-backup-development'
+VERSION = '0.3.1-backup-development'
 SOURCES = (
     ('ILCE-7CR_2.01', 'https://support.d-imaging.sony.co.jp/download/NEX/jY168ad238/BODYDATA.DAT?fm=cn',
      1140252120, '6f0e088e2aea121fcb6fc32bf57b225c68705939a284741d529d477f0ad90128'),
@@ -204,6 +204,25 @@ def research_worker(args):
             return 1
 
 
+def backup_failure_message(root):
+    state_path = Path(root) / 'device-state.private.json'
+    try:
+        state = json.loads(state_path.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        state = {}
+    # Only this known pre-authentication result permits a manual new attempt.
+    # Never suggest retrying a service session whose outcome is unknown.
+    if (state.get('phase') == 'FAILED_WITH_KNOWN_READ_STATE'
+            and state.get('error_type') == 'DriverLaunchNotStarted'):
+        return ('Windows 未允許驅動安裝程式啟動，尚未進入相機服務模式。\n'
+                '相機韌體與設定均未寫入，備份尚未開始。\n\n'
+                '請關閉工具，從檔案總管直接雙擊 A7CR-Tools-BackupDev.exe，'
+                '再按「自動備份」，並親自處理 Windows 管理員提示。\n'
+                '若仍被阻擋，請保留紀錄供檢查，勿停用 Windows 安全功能。')
+    return ('備份未完成。請保留 USB 連線與紀錄供檢查；沒有寫入韌體。'
+            '若已進入服務模式，請勿自行重試。')
+
+
 def run_backup_worker(root, emit, *, allow_driver_setup=False):
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
@@ -217,7 +236,7 @@ def run_backup_worker(root, emit, *, allow_driver_setup=False):
     while process.poll() is None:
         time.sleep(0.2)  # No cancel/terminate is offered during a camera session.
     if process.returncode:
-        raise RuntimeError('備份未完成。請保留 USB 連線與紀錄；沒有寫入韌體。若尚未準備相機驅動，需先完成驅動支援。')
+        raise RuntimeError(backup_failure_message(root))
     report = json.loads((root / 'latest-backup.private.json').read_text(encoding='utf-8'))
     if (report.get('phase') != 'BACKUP_VERIFIED' or report.get('firmware_or_settings_written') is not False
             or report.get('first') == old_first):

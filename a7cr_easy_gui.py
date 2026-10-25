@@ -111,7 +111,11 @@ def main():
         if not path.exists():
             messagebox.showinfo('尚無資料', '開始準備後，工具會自動建立資料夾。', parent=root)
             return
-        os.startfile(path)
+        try:
+            os.startfile(path)
+        except OSError:
+            messagebox.showinfo('Windows 無法開啟資料夾',
+                '自動開啟被 Windows 拒絕。資料仍保存在：\n\n' + str(path), parent=root)
     identify.configure(command=lambda: begin('identify'))
     backup.configure(command=lambda: begin('backup'))
     start.configure(command=begin); stop.configure(command=stop_work); folder.configure(command=open_folder)
@@ -128,7 +132,7 @@ def main():
                 else:
                     status.set(text); progress['value'] = fraction * 100
                     if kind == 'error':
-                        messagebox.showerror('準備未完成', text, parent=root)
+                        messagebox.showerror('操作未完成', text, parent=root)
         except queue.Empty:
             pass
         root.after(120, pump)

@@ -49,9 +49,14 @@
     "windows_driver": "USBSTOR",
     "service_authenticated": false,
     "backup_completed": false,
-    "camera_persistent_writes": false
+    "camera_persistent_writes": false,
+    "driver_preparation_authorized": true,
+    "driver_helper_started": false,
+    "driver_launch_windows_error": 1223
   },
   "restoration_available": false,
   "zero_brick_guarantee": false,
-  "packaged_end_to_end_preparation_scope": "Previous preparation build; cached official inputs, not rerun as physical test"
+  "packaged_end_to_end_preparation_scope": "Previous preparation build; cached official inputs, not rerun as physical test",
+  "gui_layout_inspection_scope": "Backup development build; install and restore controls disabled",
+  "version": "0.3.1-backup-development"
 }
