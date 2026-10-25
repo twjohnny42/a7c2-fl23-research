@@ -2,6 +2,10 @@
 
 [Home](../../README.md) · [简体中文](../zh-CN/changelog.md)
 
+## A7CR offline research fork - 2026-10-25
+
+- Add an offline Windows adapter around pinned A7CR research sources. Official A7CR 2.01 / Alpha 1 II 4.00 were decrypted and AP/CP extracted. Passed 32 source checks, 2304 emulated cases, exact program inverses and 20 new tests. No camera access, installation or physical restoration claim. A7C II workflows retain their model guards.
+
 ## Standard license update — 2026-10-25
 
 - Use the unmodified public PolyForm Noncommercial License 1.0.0, replacing the previous MIT/Commons Clause combination and custom preamble. README and startup notice prominently state the commercial-use/profit prohibition, separately from the false-authorization heading. Third-party and previous licenses are retained.

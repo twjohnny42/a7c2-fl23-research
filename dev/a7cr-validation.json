@@ -1,0 +1,38 @@
+{
+  "schema": "a7cr-windows-offline-research/1",
+  "model": "ILCE-7CR",
+  "firmware": "2.01",
+  "device_access": false,
+  "installable_package": false,
+  "physical_validation_performed": false,
+  "cpu_checks": {
+    "ap_converter_cases": 512,
+    "name_cases": 512,
+    "playback_color_mode_cases": 256,
+    "gamma_route_helper_cases": 512,
+    "chroma_whitelist_cases": 512
+  },
+  "programs": {
+    "AP": {
+      "bytes": 99960744,
+      "inverse_roundtrip_exact": true,
+      "actual_changed_bytes": 111
+    },
+    "CP": {
+      "bytes": 18085024,
+      "inverse_roundtrip_exact": true,
+      "actual_changed_bytes": 2042
+    }
+  },
+  "remaining": [
+    "Windows service transport and driver validation",
+    "Fresh same-body backups and native parameter merge",
+    "Native preflight, write/readback and rollback integration",
+    "Physical boot, preview, new photos/playback and restoration acceptance"
+  ],
+  "date": "2026-10-25",
+  "host": "Windows x64 / Python 3.12",
+  "source_windows_matched": 32,
+  "automated_tests_passed": 20,
+  "notes": "Offline inverse is not physical recovery. No firmware-derived bytes or body data included."
+}

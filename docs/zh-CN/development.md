@@ -137,3 +137,30 @@ CI：`.github/workflows/desktop-preview.yml` 在原生 Windows 和 `macos-15` ru
 | `AGENTS.md` | AI：不能违反的规则 |
 
 每篇英文文档在同一路径下都有对应的简体中文版，两者保持同步。不要再新增按功能拆分的说明或研究笔记：直接读代码，把决策记在更新日志或提交说明里。历史文档保留在 git 历史中。
+
+## A7CR 离线研究分支
+
+此 fork 新增 `a7cr_research.py`，保留桌面/旧版命令行的机型限制与 A7C II 载荷。使用固定版本的 lzh2016zzz A7CR 规格、injectiver 候选构建器、历史 A7C II 配方和 DavidBuchanan314/fwtool.py。原许可保留在本地，不发布固件、供体数据、机身备份或写入载荷。
+
+Windows 适配直接调用 Zig 0.13.0 内置 LLVM 汇编器（`clang -cc1as`，Thumb v7 / Cortex-A9），替换写死的 Apple clang 路径。保留预期字节/位置检查、指令模拟、文件长度与完整反向校验。CRC/本地哈希不等于 Sony 签名认证。
+
+在仓库根目录使用 Python 3.12 与 Git：
+
+```powershell
+python -m venv .venv-a7cr
+.\.venv-a7cr\Scripts\python.exe -m pip install -r dev/a7cr-requirements.txt
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py bootstrap --references build/a7cr/references
+```
+
+自行取得官方 A7CR 2.01 与 Alpha 1 II 4.00 更新包，分别以 `BODYDATA.DAT` 保存至 `build/a7cr/workspace/private/firmware/ILCE-7CR_2.01/` 和 `build/a7cr/workspace/private/firmware/ILCE-1M2_4.00/`。工作目录须存在；切勿把供体更新包放入 A7CR 存储卡。
+
+```powershell
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py inspect --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py extract --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py build --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe -m pytest dev/desktop/test_a7cr_research.py -q
+```
+
+私有输出位于被 Git 忽略的目录；重复构建会保留已有候选并停止。bootstrap 仅获取固定研究引用，不下载 Sony 固件。CLI 不枚举 USB、不认证、不改驱动、不写程序/设置/WBI，也不生成可刷写 DAT。AP/CP 候选仍需新鲜同机参数合并、验证过的双备份、Windows 传输/原生事务、分阶段回读及实机恢复验收。切勿交给 A7C II 安装器。
+
+`dev/a7cr-validation.json` 记录 Windows 上 32 项源条件、2304 个模拟案例与 AP/CP 完整反向校验通过，另有 20 个新增测试通过。未存取相机；开机、预览、色彩及复原尚未验证。

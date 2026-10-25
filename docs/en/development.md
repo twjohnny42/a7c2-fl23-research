@@ -137,3 +137,30 @@ Keep the documentation small:
 | `AGENTS.md` | AI: rules that must not be broken |
 
 Every English page has a Simplified Chinese counterpart at the same path; keep them in sync. Don't add per-feature guides or research notes. Read the code, and record decisions in the changelog or commit messages instead. Historical documents remain in git history.
+
+## A7CR offline research fork
+
+This fork adds `a7cr_research.py` without changing the desktop/legacy model guards or A7C II payloads. It uses pinned sources from lzh2016zzz (A7CR specification), injectiver (candidate builder), the historical A7C II recipe, and DavidBuchanan314/fwtool.py. Original notices remain local; no firmware, donor data, body backup or write payload is published.
+
+The Windows adapter uses Zig 0.13.0's bundled LLVM assembler directly (`clang -cc1as`, Thumb v7 / Cortex-A9), replacing the hard-coded Apple clang path. Expected-byte/placement checks, instruction emulation, file lengths and complete-file inverse checks remain active. CRC/local hashes are not Sony signature authentication.
+
+From the repository root, with Python 3.12 and Git:
+
+```powershell
+python -m venv .venv-a7cr
+.\.venv-a7cr\Scripts\python.exe -m pip install -r dev/a7cr-requirements.txt
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py bootstrap --references build/a7cr/references
+```
+
+Obtain official A7CR 2.01 and Alpha 1 II 4.00 updates yourself. Save separate `BODYDATA.DAT` files under `build/a7cr/workspace/private/firmware/ILCE-7CR_2.01/` and `build/a7cr/workspace/private/firmware/ILCE-1M2_4.00/`. The workspace must exist. Never put the donor update on an A7CR memory card.
+
+```powershell
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py inspect --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py extract --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py build --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe -m pytest dev/desktop/test_a7cr_research.py -q
+```
+
+Private outputs stay in the ignored workspace; a repeated build preserves an existing candidate and stops. Bootstrap fetches pinned research references, not Sony firmware. This CLI never opens USB, authenticates, changes drivers, writes programs/settings/WBI, or produces a flashable DAT. AP/CP candidates still need a fresh same-body parameter merge, verified duplicate backups, Windows transport/native transactions, staged readback, and physical restoration acceptance. Do not use them with the A7C II installer.
+
+`dev/a7cr-validation.json` records 32 source checks, 2304 emulated cases and exact AP/CP inverse round trips on Windows, plus 20 new tests. No physical camera was accessed; boot, preview, color and recovery remain unverified.

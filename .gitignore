@@ -20,3 +20,5 @@ dist/
 
 # Release inputs are committed only on temporary build/release-* branches.
 release-assets/
+
+.venv-a7cr/
