@@ -1,0 +1,84 @@
+{
+  "schema": "a7cr-windows-experimental/1",
+  "model": "ILCE-7CR",
+  "firmware": "2.01",
+  "device_access": true,
+  "installable_package": false,
+  "physical_validation_performed": false,
+  "cpu_checks": {
+    "ap_converter_cases": 512,
+    "name_cases": 512,
+    "playback_color_mode_cases": 256,
+    "gamma_route_helper_cases": 512,
+    "chroma_whitelist_cases": 512
+  },
+  "programs": {
+    "AP": {
+      "bytes": 99960744,
+      "inverse_roundtrip_exact": true,
+      "actual_changed_bytes": 111
+    },
+    "CP": {
+      "bytes": 18085024,
+      "inverse_roundtrip_exact": true,
+      "actual_changed_bytes": 2042
+    }
+  },
+  "remaining": [
+    "Windows WinUSB helper elevation and service entry/exit hardware acceptance",
+    "Fresh real-body dual backup and native preflight acceptance",
+    "Physical installation: boot, preview, new photos, playback, original FL and retained images",
+    "Physical restoration acceptance; no arbitrary damage or power-loss rescue proof"
+  ],
+  "date": "2026-10-25",
+  "host": "Windows x64 / Python 3.12",
+  "source_windows_matched": 32,
+  "automated_tests_passed": 142,
+  "notes": "Offline inverse is not physical recovery. No firmware-derived bytes or body data included.",
+  "packaged_gui_self_test_passed": true,
+  "packaged_end_to_end_preparation_passed": true,
+  "packaged_test_inputs": "Cached official update containers",
+  "packaged_end_to_end_seconds": 98.8,
+  "installation_available": true,
+  "embedded_worker": "Official CPython 3.12.10; no system Python/Git needed",
+  "gui_layout_inspected": true,
+  "subtests_passed": 103,
+  "native_synthetic_syscall_cases_passed": 21,
+  "physical_observation": {
+    "windows_msc_identity": "054C:0E86",
+    "windows_driver": "USBSTOR",
+    "service_authenticated": false,
+    "backup_completed": false,
+    "camera_persistent_writes": false,
+    "driver_preparation_authorized": true,
+    "driver_helper_started": false,
+    "driver_launch_windows_error": 1223
+  },
+  "restoration_available": true,
+  "zero_brick_guarantee": false,
+  "packaged_end_to_end_preparation_scope": "Previous preparation build; cached official inputs, not rerun as physical test",
+  "gui_layout_inspection_scope": "Experimental 0.4.0: fixed-folder app, explicit write confirmation defaults to No; declining creates no device job",
+  "version": "0.4.0-experimental",
+  "experimental": true,
+  "physical_installation_verified": false,
+  "physical_restoration_proven": false,
+  "native_abi": "A7IRP002/version2",
+  "native_firmware_sha_gates": false,
+  "native_automatic_write_error_inverse": false,
+  "body_programs_uploaded": false,
+  "synthetic_factory_package_test_passed": true,
+  "rule_audit": {
+    "upstream_rules_revision": "ef7db116e13e37be91e9af20360dc9bba8d64a9b",
+    "matches_local_rules": true,
+    "feature_branch_only": true,
+    "additional_agents_used": false,
+    "existing_a7c2_desktop_actions_changed": false,
+    "experimental_writes_require_explicit_confirmation": true
+  },
+  "packaged_native_job_preparation_passed": true,
+  "packaged_native_job_input_scope": "Synthetic factory-default backup fixtures; not a physical body",
+  "gui_write_confirmation_default": "no",
+  "gui_declined_write_started_device_job": false,
+  "native_load_file_bss_and_entry_bounds_validated": true,
+  "extra_original_program_payload_copies": 0
+}

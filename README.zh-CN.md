@@ -1,3 +1,5 @@
+> **A7CR 2.01 Windows 实验移植版：**`A7CR-FL23-Experimental.exe` 已加入真实的同机安装与定向还原代码，自动建立双备份、只合并 FL2/FL3 字段、原生预检、按顺序写入 CP/AP/设置/WBI，并完整读回比较。本 Windows／机身组合**尚未完成实机安装和还原验收**，不保证零变砖。原 A7C II 桌面功能保持独立。参见[开发说明](docs/zh-CN/development.md#a7cr-实验安装流程)及[验证记录](dev/a7cr-validation.json)。
+
 # A7C II Tools 3.0
 
 [English](README.md) · **简体中文**

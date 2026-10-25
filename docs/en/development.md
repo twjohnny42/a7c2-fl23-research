@@ -137,3 +137,67 @@ Keep the documentation small:
 | `AGENTS.md` | AI: rules that must not be broken |
 
 Every English page has a Simplified Chinese counterpart at the same path; keep them in sync. Don't add per-feature guides or research notes. Read the code, and record decisions in the changelog or commit messages instead. Historical documents remain in git history.
+
+## A7CR offline research fork
+
+This fork adds `a7cr_research.py` without changing the desktop/legacy model guards or A7C II payloads. It uses pinned sources from lzh2016zzz (A7CR specification), injectiver (candidate builder), the historical A7C II recipe, and DavidBuchanan314/fwtool.py. Original notices remain local; no firmware, donor data, body backup or write payload is published.
+
+The Windows adapter uses Zig 0.13.0's bundled LLVM assembler directly (`clang -cc1as`, Thumb v7 / Cortex-A9), replacing the hard-coded Apple clang path. Expected-byte/placement checks, instruction emulation, file lengths and complete-file inverse checks remain active. CRC/local hashes are not Sony signature authentication.
+
+From the repository root, with Python 3.12 and Git:
+
+```powershell
+python -m venv .venv-a7cr
+.\.venv-a7cr\Scripts\python.exe -m pip install -r dev/a7cr-requirements.txt
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py bootstrap --references build/a7cr/references
+```
+
+Obtain official A7CR 2.01 and Alpha 1 II 4.00 updates yourself. Save separate `BODYDATA.DAT` files under `build/a7cr/workspace/private/firmware/ILCE-7CR_2.01/` and `build/a7cr/workspace/private/firmware/ILCE-1M2_4.00/`. The workspace must exist. Never put the donor update on an A7CR memory card.
+
+```powershell
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py inspect --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py extract --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe a7cr_research.py build --references build/a7cr/references --workspace build/a7cr/workspace
+.\.venv-a7cr\Scripts\python.exe -m pytest dev/desktop/test_a7cr_research.py -q
+```
+
+Private outputs stay in the ignored workspace; a repeated build preserves an existing candidate and stops. Bootstrap fetches pinned research references, not Sony firmware. This CLI never opens USB, authenticates, changes drivers, writes programs/settings/WBI, or produces a flashable DAT. AP/CP candidates still need a fresh same-body parameter merge, verified duplicate backups, Windows transport/native transactions, staged readback, and physical restoration acceptance. Do not use them with the A7C II installer.
+
+`dev/a7cr-validation.json` records 32 source checks, 2304 emulated cases and exact AP/CP inverse round trips on Windows, plus 20 new tests. No physical camera was accessed; boot, preview, color and recovery remain unverified.
+
+## One-button Windows preparation app
+
+`a7cr_easy_gui.py` is an independent Tk GUI, not the A7C II desktop frontend. It automatically downloads and size/hash-checks the two official inputs, creates a private job, and runs inspect/extract/build in worker processes. Partial downloads resume only with an exact HTTP range response; corrupt files, failed jobs and interrupted candidates are preserved. Cancellation terminates only offline workers. Startup opens no camera and starts no download. A process lock prevents concurrent preparation. Completion is always PREPARED_NOT_INSTALLED; This earlier preparation-only stage was superseded by the backup development section below.
+
+The earlier packaged `A7CR-Preparation.exe` needs no Python or Git. It embeds pinned, integrity-checked reference sources and compiler/runtime files, never Sony update data or derived candidate programs. Data is stored under LOCALAPPDATA/A7CRTools, overridable with A7CR_TOOLS_DATA for tests. First-run downloads total about 2.3 GB; at least 7 GiB free is required. The source builder is `python dev/build_a7cr_easy.py` after installing `dev/a7cr-requirements.txt` and `pyinstaller==6.16.0`. Test both A7CR test modules under dev/desktop.
+
+The GUI keeps its normal Windows CFG-enabled bootloader. Native emulation runs in the bundled official Python 3.12.10 embedded interpreter, isolated with python312._pth, to avoid the documented Unicorn/PyInstaller CFG incompatibility. No Windows security setting is changed.
+
+## A7CR device development
+
+The backup development app separates three concerns: host USB driver preparation, read-only service backup, and a simulation-only install/restore transaction model. Startup and offline preparation perform no USB enumeration. Identification reads descriptors and Windows SetupAPI metadata only; serial-bearing PnP instance paths are excluded from the identification receipt.
+
+`a7cr_reader.py` adapts injectiver's MIT A7CR reader for Windows (license retained under docs/licenses). It selects only AP/CP program paths and reads checksum-valid live/saved Backup snapshots. It never uploads native code or writes camera files/settings. It rejects wrong model/interface/body binding, short reads and unknown results without retrying authentication. Two fresh independent backup directories contain programs, both settings snapshots and four protected CP units; every file is read back and verified again by `a7cr_operations.verify_checkpoint`. These are current-state scope backups, not certified stock or complete eMMC/NOR images. Two directories on one disk are not separate-disk disaster recovery.
+
+`a7cr_drivers.py` does nothing until explicitly confirmed. It admits only one present 054C:0E86 or 054C:0336 node, preserves usable drivers, verifies a pinned helper, records before/intent/after state, and requires usable post-install driver plus the same device instance. Unknown helper results persistently block repetition. The 0336 callback observes re-enumeration and prepares its host driver once, without repeating authentication. The user must handle Windows UAC; no signature enforcement or Windows security setting is disabled. The helper is the same third-party libwdi build referenced by the parent project. This driver path and live backups still require hardware acceptance; offline tests are not that evidence.
+
+`a7cr_transaction_model.py` accepts only its in-memory SimulationDevice. It tests CP-program -> CP-parameters -> AP-program -> AP-bindings -> WBI ordering, selected-range inverses, later unrelated-setting preservation, lost acknowledgements and mismatching readback. It refuses real backends. The 0.3 backup-only GUI kept both write buttons disabled. The stable-release policy remains false; 0.4 experimental actions use a separate consented native path described below. Do not turn an editable JSON flag or a successful backup into permission to flash.
+
+Developer native checks: `python dev/check_a7cr_native.py --workspace build/a7cr-native-check`. The first run obtains hash-pinned historical MIT worker sources. It compiles AArch64 code through Zig's LLVM frontend/linker and runs 20 synthetic syscall cases, including short reads, partial writes, inverse stages, read-only remount and WBI ordering. These are historical reference-worker checks, not a production Windows camera worker, boot simulation or physical power-loss recovery proof.
+
+Run the six `dev/desktop/test_a7cr_*.py` modules for host tests. Physical acceptance must separately cover Win11 service entry/exit, body backup comparison, native preflight, staged writes/full readback, new boot, preview/new photos/playback and actual restoration. No arbitrary CP-damage or power-loss rescue has been demonstrated. A request for zero brick risk cannot be met by these software checks.
+
+
+## A7CR experimental installation
+
+Version 0.4.0 adds a separate A7CR application, not a model-name override for desktop.py. The user's requested automatic backup is part of this separate workflow; the upstream backup-free desktop actions and legacy CLI contracts remain unchanged. Upstream AGENTS.md was fetched and compared to the local file at ef7db116e13e37be91e9af20360dc9bba8d64a9b; the rule text matches. No additional agents, main-branch changes or existing release rewrites were used.
+
+`a7cr_job.py` verifies same-body independent backups, overlays only expected source windows onto captured program bytes, merges donor FL2/FL3 selectors and unreferenced banks, and compiles five private workers. Schema v2 jobs reference original data directly in backup2 instead of duplicating original programs. Whole-file SHA values are informational audit records, not a firmware admission whitelist. Generated small native code and official download integrity remain checked. The package proves the complete forward/inverse byte transformation; source size/window conflicts stop.
+
+`a7cr_native/installer.c` is a modified MIT historical fixed-window worker. ABI A7IRP002/version 2 uses zero reserved hash slots, byte/dependency guards, inode/size/mount checks and full host readback. Failed writes stop without automatic inverse or write retry. Only known read EINTR and host journal rename conflicts are retried. `a7cr_native_build.py` validates AArch64 ET_DYN, constructor entry, relocations, absent imports and non-executable stack. `dev/a7cr_native_cases.py` exercises the production renderer, source and compiler through synthetic syscalls, not a camera boot.
+
+`a7cr_preflight.py`, `a7cr_install.py` and `a7cr_actions.py` bind normal USB identity and AP property 00e70003 using the legacy serial hex-text digest; no TUR/getCameraInfo gate or HASP substitution. Initial native mode-0 preflight, CP program/parameter stage, AP program/binding stage and WBI drop1/mode0 use one service session, exact reads and durable intent/return journals. Lost acknowledgements, disconnects and mismatching readback persistently stop all new device jobs. Restoration merges only owned ranges over fresh current bytes, rejecting unsaved non-project differences before group saves. This restores project program/parameter state, not full storage or power-loss damage.
+
+The GUI asks explicit experimental-write and power confirmation and never writes on startup or identification. Native preflight creates and executes temporary camera files; it is distinct from read-only backup. Native failure evidence is retained. Only after normal USB return does the app report disk verification and ask for reboot/physical checks. Completion never claims physical boot, preview, photos, playback, retained-image behavior, complete restoration or zero-brick safety. The fixed-directory distribution avoids random helper extraction paths without changing Windows security. WinUSB/UAC hardware acceptance remains open.
+
+Run all `dev/desktop/test_a7cr_*.py` paths explicitly. The full parent desktop suite requires its separate Qt/NumPy dependencies; these new standalone tests do not validate that entire application. Public fixtures and validation exclude body data, firmware, photos and private paths. Synthetic factory-default fixtures are not proof of body ownership. Current physical evidence is only MSC/USBSTOR identification and a helper-not-started 1223 result.

@@ -85,3 +85,10 @@ Some implementations contain or process small instruction/data fragments derived
 Each normal desktop launch requires manually checking the agreement and selecting the continue button. Leaving it unchecked, declining or closing the dialog does not open the operation interface. Confirmation provides risk notice; it does not waive rights that cannot lawfully be waived.
 
 Rights holders may identify disputed content and the basis of their claim through [project Issues](https://github.com/QAQLeonard/a7c2-fl23-research/issues); the author will review and address the report.
+
+## A7CR research references
+
+A7CR offline references are fetched locally from injectiver/a7cr-creative-look-tools (MIT, original LICENSE/NOTICE retained), lzh2016zzz/a7cr-fl23-research (specification, no relicensing), legacy A7C II revision b51688deecb56cd34fdd1f2948915cd6ea4e6736 (original license retained), and DavidBuchanan314/fwtool.py revision 3955d7890fc38daf942bb52827599bfe35de4a14 (original checkout license retained). Sony firmware and derived program/data bytes stay private; this fork grants no rights to those assets.
+
+
+A7CR backup reader: injectiver MIT attribution is retained in `docs/licenses/injectiver-MIT.txt`. Host driver helper is the unmodified Timocop libwdi-wdi-releases v1.0 x64 build, SHA256 27b6d9847d874674b7c412af124acf64b0b1efa397e3bbea8eab9950a6a08ee0. libwdi is LGPL-3.0-or-later; upstream source and build details: https://github.com/Timocop/libwdi-wdi-releases and https://github.com/pbatard/libwdi. The tool never disables driver signature enforcement.

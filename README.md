@@ -1,3 +1,5 @@
+> **A7CR 2.01 Windows experimental port:** `A7CR-FL23-Experimental.exe` now has real per-body installation and targeted restoration code. It creates fresh dual backups, merges only FL2/FL3 fields, runs native preflight and ordered CP/AP/settings/WBI stages, and performs full host byte readback. This Windows/body combination has **not** passed physical installation/restoration acceptance. No zero-brick guarantee. The original A7C II desktop remains separate. See [development](docs/en/development.md#a7cr-experimental-installation) and [validation](dev/a7cr-validation.json).
+
 # A7C II Tools 3.0
 
 **English** · [简体中文](README.zh-CN.md)
